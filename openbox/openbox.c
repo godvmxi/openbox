@@ -51,7 +51,8 @@
 #include "parser/parse.h"
 #include "render/render.h"
 #include "render/theme.h"
-
+#include <syslog.h>
+#include <stdio.h>
 #ifdef HAVE_FCNTL_H
 #  include <fcntl.h>
 #endif
@@ -121,7 +122,8 @@ gint main(gint argc, gchar **argv)
     gchar *program_name;
 
     ob_set_state(OB_STATE_STARTING);
-
+	openlog("OPENBOX",LOG_CONS|LOG_PID,LOG_USER);
+	syslog(LOG_INFO,"openbox start");
     /* initialize the locale */
     if (!setlocale(LC_ALL, ""))
         g_message("Couldn't set locale from environment.");
