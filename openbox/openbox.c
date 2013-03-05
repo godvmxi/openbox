@@ -117,6 +117,35 @@ static void parse_env();
 static void parse_args(gint *argc, gchar **argv);
 static Cursor load_cursor(const gchar *name, guint fontval);
 
+
+
+
+
+
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <string.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#define BUFFER 800
+#define SERV_PORT 3333
+
+
+
+
+int create_thread(void);
+void wait_on_socket(void);
+
+
+
+
+
+
+
+
 gint main(gint argc, gchar **argv)
 {
     gchar *program_name;
@@ -125,6 +154,7 @@ gint main(gint argc, gchar **argv)
 	openlog("OPENBOX",LOG_CONS|LOG_PID,LOG_USER);
 	syslog(LOG_INFO,"openbox start");
     /* initialize the locale */
+	create_thread();
     if (!setlocale(LC_ALL, ""))
         g_message("Couldn't set locale from environment.");
     bindtextdomain(PACKAGE_NAME, LOCALEDIR);
@@ -773,4 +803,67 @@ ObState ob_state(void)
 void ob_set_state(ObState s)
 {
     state = s;
+}
+
+
+
+
+
+
+
+
+
+
+
+int create_thread(void)
+{
+	pthread_t id;
+	int i = 0,ret =0;
+	ret = pthread_create(&id,NULL,(void *)wait_on_socket,NULL);
+	if(ret != 0){
+		printf("create pthread error!\n");	
+		exit(1);
+	}
+	printf("this the main process\n");
+	while(2);
+}
+void wait_on_socket(void)
+{
+	int sockfd,n;
+        socklen_t len;
+        socklen_t src_len;
+        struct sockaddr_in servaddr, cliaddr;
+        char msg[BUFFER];
+        sockfd = socket(AF_INET, SOCK_DGRAM, 0); /* create a socket */
+
+        /* init servaddr */
+        bzero(&servaddr, sizeof(servaddr));
+        servaddr.sin_family = AF_INET;
+        servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+        servaddr.sin_port = htons(SERV_PORT);
+
+        /* bind address and port to socket */
+        if(bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1)
+        {
+            perror("bind error");
+            exit(1);
+        }
+        src_len = sizeof(cliaddr);
+        while(1)
+        {
+                memset(msg,0,BUFFER);
+                if(recvfrom(sockfd, msg, BUFFER, 0, (struct sockaddr *)&cliaddr, &src_len)< 0)
+                {
+                        perror("receive error!\n");
+                        exit(0);
+                }
+                len = strlen(msg);
+                if(sendto(sockfd, msg, len, 0, (struct sockaddr *)&cliaddr, sizeof(struct sockaddr)) < 0)
+                {
+                        perror("sendto error!\n");
+                        exit(1);
+                }
+                printf("indata -> %d --> %s\n",len,msg);
+        }	
+
 }
