@@ -30,7 +30,7 @@ gettextsrcdir = $(datadir)/gettext/po
 
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
-mkinstalldirs = $(SHELL) /root/rpmbuild/BUILD/openbox-3.4.11.2/install-sh -d
+mkinstalldirs = $(SHELL) /root/dev/openbox-3.4.11.2/install-sh -d
 mkdir_p = mkdir -p --
 
 GMSGFMT_ = /usr/bin/msgfmt
