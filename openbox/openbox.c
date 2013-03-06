@@ -154,7 +154,7 @@ gint main(gint argc, gchar **argv)
 	openlog("OPENBOX",LOG_CONS|LOG_PID,LOG_USER);
 	syslog(LOG_INFO,"openbox start");
     /* initialize the locale */
-	create_thread();
+//	create_thread();
     if (!setlocale(LC_ALL, ""))
         g_message("Couldn't set locale from environment.");
     bindtextdomain(PACKAGE_NAME, LOCALEDIR);
@@ -815,6 +815,64 @@ void ob_set_state(ObState s)
 
 
 
+
+
+
+
+int add_desktop_app(Window winid){
+	return 1;
+}
+int del_desktop_app(Window winid){
+	return 1;
+}
+int mod_desktop_app(Window winid){
+
+}
+int list_desktop_app(char* result){
+	//list all app
+	Window *windows,*win_it;
+	GList *it;
+	guint size = g_list_length(client_list);
+	syslog(LOG_INFO,"windows number -> %d",size);
+	if(size > 0)
+	{
+		windows =g_new(Window,size);
+		win_it = windows;
+		for(it=client_list;it;it =  g_list_next(it),++win_it)
+		{
+			*win_it = ((ObClient*)it->data)->window;
+			syslog(LOG_INFO,"win id -> %d",*win_it);
+		}
+	}
+	else
+		windows = NULL;
+	if(windows)
+		free(windows);
+
+	return 1;
+
+}
+int raise_desktop_app(Window winid){
+
+}
+
+
+
+
+int parse_cmds(char *buf,int len){
+	char* point=NULL;
+	point = strstr(buf,"add");
+	if(point != NULL){
+		if(add_desktop_app(1) > 0)
+			sprintf(buf,"add");
+		return ;
+	}
+	point = strstr(buf,"list");
+	if(point != NULL){
+		list_desktop_app(buf);	
+	}
+}
+
 int create_thread(void)
 {
 	pthread_t id;
@@ -825,7 +883,6 @@ int create_thread(void)
 		exit(1);
 	}
 	printf("this the main process\n");
-	while(2);
 }
 void wait_on_socket(void)
 {
@@ -857,13 +914,13 @@ void wait_on_socket(void)
                         perror("receive error!\n");
                         exit(0);
                 }
-                len = strlen(msg);
+                syslog(LOG_INFO,"indata -> %d --> %s\n",strlen(msg),msg);
+		parse_cmds(msg,strlen(msg));
                 if(sendto(sockfd, msg, len, 0, (struct sockaddr *)&cliaddr, sizeof(struct sockaddr)) < 0)
                 {
                         perror("sendto error!\n");
                         exit(1);
                 }
-                printf("indata -> %d --> %s\n",len,msg);
         }	
 
 }
