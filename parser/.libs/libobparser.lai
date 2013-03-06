@@ -11,7 +11,7 @@ dlname='libobparser.so.21'
 library_names='libobparser.so.21.0.9 libobparser.so.21 libobparser.so'
 
 # The name of the static archive.
-old_library='libobparser.a'
+old_library=''
 
 # Linker flags that can not go in dependency_libs.
 inherited_linker_flags=''

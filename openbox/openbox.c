@@ -154,7 +154,7 @@ gint main(gint argc, gchar **argv)
 	openlog("OPENBOX",LOG_CONS|LOG_PID,LOG_USER);
 	syslog(LOG_INFO,"openbox start");
     /* initialize the locale */
-//	create_thread();
+	create_thread();
     if (!setlocale(LC_ALL, ""))
         g_message("Couldn't set locale from environment.");
     bindtextdomain(PACKAGE_NAME, LOCALEDIR);
@@ -853,7 +853,33 @@ int list_desktop_app(char* result){
 
 }
 int raise_desktop_app(Window winid){
+	//raise
+	Window *windows,*win_it;
+	GList *it;
+	guint size = g_list_length(client_list);
+	syslog(LOG_INFO,"windows raise id -> %d",winid);
+	if(size > 0)
+	{
+		windows =g_new(Window,size);
+		win_it = windows;
+		for(it=client_list;it;it =  g_list_next(it),++win_it)
+		{
+			*win_it = ((ObClient*)it->data)->window;
+			if(*win_it == winid)
+			{
+				syslog(LOG_INFO,"find target winid ,will raise it");
+				stacking_temp_raise(((ObClient*)it->data));
+				
+			}
+			return 0;
+		}
+	}
+	else
+		windows = NULL;
+	if(windows)
+		free(windows);
 
+	return 1;
 }
 
 
@@ -867,10 +893,12 @@ int parse_cmds(char *buf,int len){
 			sprintf(buf,"add");
 		return ;
 	}
-	point = strstr(buf,"list");
+	point = strstr(buf,"raise");
 	if(point != NULL){
-		list_desktop_app(buf);	
+		point+=6;
+		raise_desktop_app(atio(point));	
 	}
+	point = strstr(buf,"list");
 }
 
 int create_thread(void)
