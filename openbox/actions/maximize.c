@@ -1,6 +1,7 @@
 #include "openbox/actions.h"
 #include "openbox/client.h"
-
+#include "syslog.h"
+#include "stdio.h"
 /* These match the values for client_maximize */
 typedef enum {
     BOTH = 0,
@@ -69,6 +70,7 @@ static gpointer setup_vert_func(ObParseInst *i, xmlDocPtr doc, xmlNodePtr node)
 static gboolean run_func_on(ObActionsData *data, gpointer options)
 {
     Options *o = options;
+	syslog(LOG_INFO,"run_on data-> %d-%d-%d-%d-%d-%d-%d",data->uact,data->state,data->x,data->y,data->button,data->context,data->client->window);
     if (data->client) {
         actions_client_move(data, TRUE);
         client_maximize(data->client, TRUE, o->dir);
@@ -81,6 +83,7 @@ static gboolean run_func_on(ObActionsData *data, gpointer options)
 static gboolean run_func_off(ObActionsData *data, gpointer options)
 {
     Options *o = options;
+	syslog(LOG_INFO,"run_off data-> %d-%d-%d-%d-%d-%d-%d",data->uact,data->state,data->x,data->y,data->button,data->context,data->client->window);
     if (data->client) {
         actions_client_move(data, TRUE);
         client_maximize(data->client, FALSE, o->dir);
@@ -93,6 +96,7 @@ static gboolean run_func_off(ObActionsData *data, gpointer options)
 static gboolean run_func_toggle(ObActionsData *data, gpointer options)
 {
     Options *o = options;
+	syslog(LOG_INFO,"toggle data-> %d-%d-%d-%d-%d-%d-%d",data->uact,data->state,data->x,data->y,data->button,data->context,data->client->window);
     if (data->client) {
         gboolean toggle;
         actions_client_move(data, TRUE);

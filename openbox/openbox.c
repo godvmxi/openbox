@@ -132,7 +132,7 @@ static Cursor load_cursor(const gchar *name, guint fontval);
 #include <pthread.h>
 #define BUFFER 800
 #define SERV_PORT 3333
-
+//#include "actions.h"
 
 
 
@@ -855,6 +855,7 @@ int list_desktop_app(char* result){
 int raise_desktop_app(Window winid){
 	//raise
 	Window *windows,*win_it;
+	ObActionsData dat = { 4,0,0,0,1,NULL,14};
 	GList *it;
 	guint size = g_list_length(client_list);
 	syslog(LOG_INFO,"windows raise id -> %d",winid);
@@ -865,13 +866,18 @@ int raise_desktop_app(Window winid){
 		for(it=client_list;it;it =  g_list_next(it),++win_it)
 		{
 			*win_it = ((ObClient*)it->data)->window;
+			syslog(LOG_INFO,"win id -> %d",*win_it);
 			if(*win_it == winid)
 			{
 				syslog(LOG_INFO,"find target winid ,will raise it");
-				stacking_temp_raise(((ObClient*)it->data));
+				//stacking_raise(((ObClient*)it->data));
+				dat.client = (ObClient*)it->data;
+				actions_client_move(&dat,TRUE);
+				client_maximize(dat.client,TRUE,1);
+				actions_client_move(&dat,FALSE);
+				return 0;
 				
 			}
-			return 0;
 		}
 	}
 	else
@@ -896,9 +902,12 @@ int parse_cmds(char *buf,int len){
 	point = strstr(buf,"raise");
 	if(point != NULL){
 		point+=6;
-		raise_desktop_app(atio(point));	
+		raise_desktop_app(atoi(point));	
 	}
 	point = strstr(buf,"list");
+	if(point != NULL){
+		list_desktop_app(buf);
+	}	
 }
 
 int create_thread(void)
