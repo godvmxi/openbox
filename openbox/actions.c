@@ -25,9 +25,10 @@
 #include "client.h"
 #include "openbox.h"
 #include "debug.h"
-
+#include "syslog.h"
+#include "stdio.h"
 #include "actions/all.h"
-
+#include "syslog.h"
 static void     actions_definition_ref(ObActionsDefinition *def);
 static void     actions_definition_unref(ObActionsDefinition *def);
 static gboolean actions_interactive_begin_act(ObActionsAct *act, guint state);
@@ -111,7 +112,7 @@ gboolean actions_register(const gchar *name,
     def->shutdown = NULL;
 
     registered = g_slist_prepend(registered, def);
-
+	syslog(LOG_INFO,"action - > %s",def->name);
     return TRUE;
 }
 
@@ -255,23 +256,30 @@ void actions_run_acts(GSList *acts,
 
     /* Don't allow saving the initial state when running things from the
        menu */
+	//syslog(LOG_INFO,"run_acts->%d-%d-%d-%d-%d-%d-%d",uact,state,x,y,button,con,client->window);
     if (uact == OB_USER_ACTION_MENU_SELECTION)
         state = 0;
     /* If x and y are < 0 then use the current pointer position */
     if (x < 0 && y < 0)
         screen_pointer_pos(&x, &y);
-
+	//syslog(LOG_INFO,"action number --> %d",g_list_length(acts));
     for (it = acts; it; it = g_slist_next(it)) {
         ObActionsData data;
         ObActionsAct *act = it->data;
         gboolean ok = TRUE;
+	syslog(LOG_INFO,"action ->%s",act->def->name);
 
         actions_setup_data(&data, uact, state, x, y, button, con, client);
 
         /* if they have the same run function, then we'll assume they are
            cooperating and not cancel eachother out */
         if (!interactive_act || interactive_act->def->run != act->def->run) {
+		if(interactive_act != NULL)
+		syslog(LOG_INFO,"interactive act ->%s",interactive_act->def->name);
+		else
+			syslog(LOG_INFO,"interactive act null");
             if (actions_act_is_interactive(act)) {
+		syslog(LOG_INFO,"interactive act 2");
                 /* cancel the old one */
                 if (interactive_act)
                     actions_interactive_cancel_act();
@@ -354,11 +362,14 @@ gboolean actions_interactive_input_event(XEvent *e)
 void actions_client_move(ObActionsData *data, gboolean start)
 {
     static gulong ignore_start = 0;
-    if (start)
+    if (start){
+//	syslog(LOG_INFO,"client move true");
         ignore_start = event_start_ignore_all_enters();
+	}
     else if (config_focus_follow &&
              data->context != OB_FRAME_CONTEXT_CLIENT)
     {
+//	syslog(LOG_INFO,"client move else if");
         if (data->uact == OB_USER_ACTION_MOUSE_PRESS) {
             struct _ObClient *c;
 
@@ -383,4 +394,5 @@ void actions_client_move(ObActionsData *data, gboolean start)
         else if (!data->button && !config_focus_under_mouse)
             event_end_ignore_all_enters(ignore_start);
     }
+//	syslog(LOG_INFO,"client move false");
 }

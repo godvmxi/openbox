@@ -855,6 +855,7 @@ int list_desktop_app(char* result){
 int raise_desktop_app(Window winid){
 	//raise
 	Window *windows,*win_it;
+	gboolean start;
 	ObActionsData dat = { 4,0,0,0,1,NULL,14};
 	GList *it;
 	guint size = g_list_length(client_list);
@@ -870,11 +871,22 @@ int raise_desktop_app(Window winid){
 			if(*win_it == winid)
 			{
 				syslog(LOG_INFO,"find target winid ,will raise it");
-				//stacking_raise(((ObClient*)it->data));
-				dat.client = (ObClient*)it->data;
-				actions_client_move(&dat,TRUE);
-				client_maximize(dat.client,TRUE,1);
-				actions_client_move(&dat,FALSE);
+				start = event_start_ignore_all_enters();
+				client_activate(((ObClient*)it->data),TRUE,TRUE,TRUE,TRUE,TRUE);
+				//event_start_ignore_all_enters();
+				event_end_ignore_all_enters(start);
+				start = event_start_ignore_all_enters();
+				stacking_raise(CLIENT_AS_WINDOW((ObClient*)it->data));
+				//event_start_ignore_all_enters();
+				event_end_ignore_all_enters(start);
+				start = event_start_ignore_all_enters();
+				client_shade(((ObClient*)it->data),FALSE);
+				event_end_ignore_all_enters(start);
+				client_focus((ObClient*)it->data);
+				//dat.client = (ObClient*)it->data;
+				//actions_client_move(&dat,TRUE);
+				//client_maximize(dat.client,TRUE,1);
+				//actions_client_move(&dat,FALSE);
 				return 0;
 				
 			}

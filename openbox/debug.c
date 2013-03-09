@@ -23,6 +23,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <syslog.h>
 static gboolean show;
 
 void ob_debug_show_output(gboolean enable)
@@ -37,7 +38,8 @@ void ob_debug(const gchar *a, ...)
     if (show) {
         fprintf(stderr, "DEBUG: ");
         va_start(vl, a);
-        vfprintf(stderr, a, vl);
+	syslog(LOG_INFO,a,vl);
+        //vfprintf(stderr, a, vl);
         va_end(vl);
     }
 }
