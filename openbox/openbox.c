@@ -826,7 +826,7 @@ int del_desktop_app(Window winid){
 	return 1;
 }
 int mod_desktop_app(Window winid){
-
+	return 1;
 }
 int list_desktop_app(char* result){
 	//list all app
@@ -855,6 +855,8 @@ int list_desktop_app(char* result){
 int raise_desktop_app(Window winid){
 	//raise
 	Window *windows,*win_it;
+	ObActionsAct *act;
+	GList *actions;
 	gboolean start;
 	ObActionsData dat = { 4,0,0,0,1,NULL,14};
 	GList *it;
@@ -871,22 +873,27 @@ int raise_desktop_app(Window winid){
 			if(*win_it == winid)
 			{
 				syslog(LOG_INFO,"find target winid ,will raise it");
-				start = event_start_ignore_all_enters();
-				client_activate(((ObClient*)it->data),TRUE,TRUE,TRUE,TRUE,TRUE);
+				//start = event_start_ignore_all_enters();
+				//client_activate(((ObClient*)it->data),TRUE,TRUE,TRUE,TRUE,TRUE);
 				//event_start_ignore_all_enters();
-				event_end_ignore_all_enters(start);
-				start = event_start_ignore_all_enters();
-				stacking_raise(CLIENT_AS_WINDOW((ObClient*)it->data));
+				//event_end_ignore_all_enters(start);
+				//start = event_start_ignore_all_enters();
+				//stacking_raise(CLIENT_AS_WINDOW((ObClient*)it->data));
 				//event_start_ignore_all_enters();
-				event_end_ignore_all_enters(start);
-				start = event_start_ignore_all_enters();
-				client_shade(((ObClient*)it->data),FALSE);
-				event_end_ignore_all_enters(start);
-				client_focus((ObClient*)it->data);
+				//event_end_ignore_all_enters(start);
+				//start = event_start_ignore_all_enters();
+				//client_shade(((ObClient*)it->data),FALSE);
+				//event_end_ignore_all_enters(start);
+				//client_focus((ObClient*)it->data);
 				//dat.client = (ObClient*)it->data;
 				//actions_client_move(&dat,TRUE);
 				//client_maximize(dat.client,TRUE,1);
 				//actions_client_move(&dat,FALSE);
+				actions = g_list_alloc();
+				act = actions_parse_string("ToggleMaximizeFull");
+				g_list_insert(actions,act,-1);
+				//syslog(LOG_INFO,"string act name ->%s",act->def->name);
+				actions_run_acts(actions,0,0,78,0,0,0,(ObClient*)it->data);		
 				return 0;
 				
 			}

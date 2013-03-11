@@ -180,13 +180,14 @@ ObActionsAct* actions_parse_string(const gchar *name)
     if ((act = actions_build_act_from_string(name)))
         if (act->def->setup)
             act->options = act->def->setup(NULL, NULL, NULL);
-
+	syslog(LOG_INFO,"parse_string ->%s -> %s",name,act->def->name);
     return act;
 }
 
 ObActionsAct* actions_parse(ObParseInst *i,
                             xmlDocPtr doc,
                             xmlNodePtr node)
+
 {
     gchar *name;
     ObActionsAct *act = NULL;
@@ -256,7 +257,9 @@ void actions_run_acts(GSList *acts,
 
     /* Don't allow saving the initial state when running things from the
        menu */
-	//syslog(LOG_INFO,"run_acts->%d-%d-%d-%d-%d-%d-%d",uact,state,x,y,button,con,client->window);
+syslog(LOG_INFO,"run_acts->%d-%d-%d-%d-%d-%d",uact,state,x,y,button,con);
+	if(client != NULL)
+	syslog(LOG_INFO,"client not NULL->%d",client->window);
     if (uact == OB_USER_ACTION_MENU_SELECTION)
         state = 0;
     /* If x and y are < 0 then use the current pointer position */
