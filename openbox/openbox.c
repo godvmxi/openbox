@@ -887,15 +887,21 @@ int raise_desktop_app(Window winid){
 			//			break;
 			//		}            				
     			//	}
-				act = actions_parse_string("ToggleMaximizeFull");
+				act = actions_parse_string("Focus");
 				actions = g_slist_append(actions,act);
+				act = actions_parse_string("MaximizeFull");
+				//act = actions_parse_string("ToggleMaximizeFull");
+				actions = g_slist_append(actions,act);
+				act = actions_parse_string("Raise");
+				actions = g_slist_append(actions,act);
+				//actions = g_slist_append(actions,act);
+				//actions = g_slist_append(actions,act);
 				
 				syslog(LOG_INFO,"gslist len -> %d",g_slist_length(actions)); 
-				g_slist_append(actions,act);
-				g_slist_append(actions,act);
-				syslog(LOG_INFO,"string act name ->%s",(char *)act->def->name);
+				if(act == NULL)	
+					syslog(LOG_INFO,"act null");
 				actions_run_acts(actions,OB_USER_ACTION_MENU_SELECTION,0,-1,-1,0,OB_FRAME_CONTEXT_NONE,(ObClient*)it->data);	
-				free(actions);	
+				//g_slist_free(actions);
 				return 0;
 				
 			}
