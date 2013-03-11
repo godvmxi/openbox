@@ -258,6 +258,7 @@ void actions_run_acts(GSList *acts,
     /* Don't allow saving the initial state when running things from the
        menu */
 syslog(LOG_INFO,"run_acts->%d-%d-%d-%d-%d-%d",uact,state,x,y,button,con);
+syslog(LOG_INFO,"gslist len -> %d",g_slist_length(acts));
 	if(client != NULL)
 	syslog(LOG_INFO,"client not NULL->%d",client->window);
     if (uact == OB_USER_ACTION_MENU_SELECTION)
