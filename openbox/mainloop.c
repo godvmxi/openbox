@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <sys/select.h>
 #include <signal.h>
-
+#include <syslog.h>
 typedef struct _ObMainLoopTimer             ObMainLoopTimer;
 typedef struct _ObMainLoopSignal            ObMainLoopSignal;
 typedef struct _ObMainLoopSignalHandlerType ObMainLoopSignalHandlerType;
@@ -66,7 +66,7 @@ static gint core_signals[] =
 static void sighandler(gint sig);
 static void timer_dispatch(ObMainLoop *loop, GTimeVal **wait);
 static void fd_handler_destroy(gpointer data);
-
+extern int my_window_loop(void);
 struct _ObMainLoop
 {
     Display *display;
@@ -239,7 +239,12 @@ static void fd_handle_foreach(gpointer key,
                               gpointer data)
 {
     ObMainLoopFdHandlerType *h = value;
+static	unsigned int test = 0;
+	test ++;
     fd_set *set = data;
+			if(test % 10 == 0){
+				syslog(LOG_INFO,"main hash table handle ");
+			}
 
     if (FD_ISSET(h->fd, set))
         h->func(h->fd, h->data);
@@ -251,15 +256,20 @@ void ob_main_loop_run(ObMainLoop *loop)
     struct timeval *wait;
     fd_set selset;
     GSList *it;
-
+unsigned int test=0,con = 0;
     loop->run = TRUE;
     loop->running = TRUE;
 
     while (loop->run) {
+	test++;
+	if(test % 10 == 0){
+		syslog(LOG_INFO,"main loop mark ->",con++);
+	}
         if (loop->signal_fired) {
             guint i;
             sigset_t oldset;
 
+		syslog(LOG_INFO,"main loop singal fired start");
             /* block signals so that we can do this without the data changing
                on us */
             sigprocmask(SIG_SETMASK, &all_signals_set, &oldset);
@@ -272,25 +282,37 @@ void ob_main_loop_run(ObMainLoop *loop)
                         h->func(i, h->data);
                     }
                     loop->signals_fired[i]--;
+			if(test % 10 == 0){
+				syslog(LOG_INFO,"main singal fired ");
+			}
                 }
             }
             loop->signal_fired = FALSE;
 
             sigprocmask(SIG_SETMASK, &oldset, NULL);
+		syslog(LOG_INFO,"main loop singal fired end");
         } else if (XPending(loop->display)) {
+	//	syslog(LOG_INFO,"main loop event start");
             do {
                 XNextEvent(loop->display, &e);
+			if(test % 10 == 0){
+				syslog(LOG_INFO,"event deal");
+			}
 
                 for (it = loop->x_handlers; it; it = g_slist_next(it)) {
                     ObMainLoopXHandlerType *h = it->data;
                     h->func(&e, h->data);
                 }
             } while (XPending(loop->display) && loop->run);
+	//	syslog(LOG_INFO,"main loop event end");
+		my_window_loop();
         } else {
             /* this only runs if there were no x events received */
 
+		syslog(LOG_INFO,"main loop hash start");
             timer_dispatch(loop, (GTimeVal**)&wait);
 
+		syslog(LOG_INFO,"main loop hash start 2");
             selset = loop->fd_set;
             /* there is a small race condition here. if a signal occurs
                between this if() and the select() then we will not process
@@ -300,12 +322,17 @@ void ob_main_loop_run(ObMainLoop *loop)
             if (!loop->signal_fired)
                 select(loop->fd_max + 1, &selset, NULL, NULL, wait);
 
+		syslog(LOG_INFO,"main loop hash start 3");
             /* handle the X events with highest prioirity */
-            if (FD_ISSET(loop->fd_x, &selset))
+            if (FD_ISSET(loop->fd_x, &selset)){
+			
+		syslog(LOG_INFO,"main loop hash before end ");
                 continue;
+		}
 
             g_hash_table_foreach(loop->fd_handlers,
                                  fd_handle_foreach, &selset);
+		syslog(LOG_INFO,"main loop hash end");
         }
     }
 

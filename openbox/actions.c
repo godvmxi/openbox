@@ -266,7 +266,7 @@ syslog(LOG_INFO,"gslist len -> %d",g_slist_length(acts));
     /* If x and y are < 0 then use the current pointer position */
     if (x < 0 && y < 0)
         screen_pointer_pos(&x, &y);
-	//syslog(LOG_INFO,"action number --> %d",g_list_length(acts));
+	syslog(LOG_INFO,"mouse ?????");
     for (it = acts; it; it = g_slist_next(it)) {
         ObActionsData data;
         ObActionsAct *act = it->data;

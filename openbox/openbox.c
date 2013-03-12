@@ -138,13 +138,20 @@ static Cursor load_cursor(const gchar *name, guint fontval);
 
 int create_thread(void);
 void wait_on_socket(void);
+#define BUFFER_SIZE 30
 
+pthread_mutex_t socket_cmd_lock;
+typedef struct _SOCKET_CMD SOCKET_CMD;
+struct _SOCKET_CMD
+{
+	char raw[BUFFER_SIZE];
+	int source;
+	int method ;
+	char dat[BUFFER_SIZE-10];
+};
+GList *socket_cmd_list=NULL;
 
-
-
-
-
-
+int parse_cmds(char *buf,int len);
 
 gint main(gint argc, gchar **argv)
 {
@@ -154,7 +161,9 @@ gint main(gint argc, gchar **argv)
 	openlog("OPENBOX",LOG_CONS|LOG_PID,LOG_USER);
 	syslog(LOG_INFO,"openbox start");
     /* initialize the locale */
+	pthread_mutex_init(&socket_cmd_lock,NULL);
 	create_thread();
+	
     if (!setlocale(LC_ALL, ""))
         g_message("Couldn't set locale from environment.");
     bindtextdomain(PACKAGE_NAME, LOCALEDIR);
@@ -915,7 +924,38 @@ int raise_desktop_app(Window winid){
 	return 1;
 }
 
+int my_window_loop(void){
+	static int counter = 0,event = 0;
+	SOCKET_CMD *cmd;
+	GList *it;
+	Window *win_it;
+	syslog(LOG_INFO,"goto my loop start 1");
+	pthread_mutex_lock(&socket_cmd_lock);
+	syslog(LOG_INFO,"goto my loop start  2");
+	guint size = g_slist_length(client_list);
+	int list_len = g_list_length(socket_cmd_list);	
+	if(list_len <= 0){
+		pthread_mutex_unlock(&socket_cmd_lock);
 
+		return 0;
+	}
+	for(it = socket_cmd_list;it;it=socket_cmd_list)
+	{
+		syslog(LOG_INFO,"list length -- >%d\n",g_list_length(socket_cmd_list));
+		syslog(LOG_INFO,"content -->%s \n",((SOCKET_CMD *)it->data)->raw);
+		cmd = (SOCKET_CMD *)it->data;
+			
+		parse_cmds(cmd->raw,strlen(cmd->raw));
+		
+		//clear the used cmd	
+		socket_cmd_list = g_list_remove(socket_cmd_list,it->data);
+		free(cmd);
+	}
+	printf("list length -- >%d\n",g_list_length(socket_cmd_list));
+	syslog(LOG_INFO,"goto my loop start 3");
+	pthread_mutex_unlock(&socket_cmd_lock);
+	syslog(LOG_INFO,"goto my loop start 4");
+}
 
 
 int parse_cmds(char *buf,int len){
@@ -950,14 +990,53 @@ int create_thread(void)
 }
 void wait_on_socket(void)
 {
-	int sockfd,n;
+	int sockfd;
+	SOCKET_CMD *buf = NULL;
         socklen_t len;
         socklen_t src_len;
+	GList *it,*tmp;
         struct sockaddr_in servaddr, cliaddr;
         char msg[BUFFER];
         sockfd = socket(AF_INET, SOCK_DGRAM, 0); /* create a socket */
+/*
+	pthread_mutex_lock(&socket_cmd_lock);
+	buf = malloc(sizeof(SOCKET_CMD));
+	memset(buf->raw,0,sizeof(BUFFER_SIZE));
+	strcpy(buf->raw,"1111");
+	socket_cmd_list	= g_list_append(socket_cmd_list,buf);
+	buf = malloc(sizeof(SOCKET_CMD));
+	memset(buf->raw,0,sizeof(BUFFER_SIZE));
+	strcpy(buf->raw,"2222");
+	socket_cmd_list	= g_list_append(socket_cmd_list,buf);
+	buf = malloc(sizeof(SOCKET_CMD));
+	memset(buf->raw,0,sizeof(BUFFER_SIZE));
+	strcpy(buf->raw,"3333");
+	socket_cmd_list	= g_list_append(socket_cmd_list,buf);
+	buf = malloc(sizeof(SOCKET_CMD));
+	memset(buf->raw,0,sizeof(BUFFER_SIZE));
+	strcpy(buf->raw,"4444");
+	socket_cmd_list	= g_list_append(socket_cmd_list,buf);
+	pthread_mutex_unlock(&socket_cmd_lock);
 
-        /* init servaddr */
+	
+	for(it=socket_cmd_list;it;it=g_list_next(it)){
+		printf("list length -- >%d\n",g_list_length(socket_cmd_list));
+		printf("content -->%s \n",((SOCKET_CMD *)it->data)->raw);
+	}
+	for(it = socket_cmd_list;it;it=socket_cmd_list)
+	{
+		printf("list length -- >%d\n",g_list_length(socket_cmd_list));
+		printf("content -->%s \n",((SOCKET_CMD *)it->data)->raw);
+		tmp = (SOCKET_CMD *)it->data;
+		socket_cmd_list = g_list_remove(socket_cmd_list,it->data);
+		
+		free(tmp);
+	}
+		printf("list length -- >%d\n",g_list_length(socket_cmd_list));
+
+*/
+
+        /* init s//ervaddr */
         bzero(&servaddr, sizeof(servaddr));
         servaddr.sin_family = AF_INET;
         servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -972,19 +1051,30 @@ void wait_on_socket(void)
         src_len = sizeof(cliaddr);
         while(1)
         {
-                memset(msg,0,BUFFER);
-                if(recvfrom(sockfd, msg, BUFFER, 0, (struct sockaddr *)&cliaddr, &src_len)< 0)
+		buf = malloc(sizeof(SOCKET_CMD));
+                memset(buf->raw,0,BUFFER_SIZE);
+                if(recvfrom(sockfd, buf->raw, BUFFER_SIZE, 0, (struct sockaddr *)&cliaddr, &src_len)< 0)
                 {
                         perror("receive error!\n");
                         exit(0);
                 }
-                syslog(LOG_INFO,"indata -> %d --> %s\n",strlen(msg),msg);
-		parse_cmds(msg,strlen(msg));
-                if(sendto(sockfd, msg, len, 0, (struct sockaddr *)&cliaddr, sizeof(struct sockaddr)) < 0)
-                {
-                        perror("sendto error!\n");
-                        exit(1);
-                }
+                syslog(LOG_INFO,"indata -> %d --> %s\n",strlen(buf->raw),buf->raw);
+		pthread_mutex_lock(&socket_cmd_lock);
+                syslog(LOG_INFO,"udp get lock");
+		socket_cmd_list	= g_list_append(socket_cmd_list,buf);
+                syslog(LOG_INFO,"udp release lock");
+		pthread_mutex_unlock(&socket_cmd_lock);
+		for(it=socket_cmd_list;it;it=g_list_next(it)){
+			printf("list length -- >%d\n",g_list_length(socket_cmd_list));
+			printf("receive -->%s \n",((SOCKET_CMD *)it->data)->raw);
+		}
+		//parse_cmds(buf,strlen(buf));
+		
+                //if(sendto(sockfd, msg, len, 0, (struct sockaddr *)&cliaddr, sizeof(struct sockaddr)) < 0)
+                //{
+                  //      perror("sendto error!\n");
+                    //    exit(1);
+                //}
         }	
 
 }
