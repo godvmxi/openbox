@@ -134,6 +134,7 @@ static Cursor load_cursor(const gchar *name, guint fontval);
 #define SERV_PORT 3333
 //#include "actions.h"
 
+	int sockfd = -1;
 
 
 int create_thread(void);
@@ -152,7 +153,7 @@ struct _SOCKET_CMD
 GList *socket_cmd_list=NULL;
 
 int parse_cmds(char *buf,int len);
-
+void ob_main_socket_handler(gint fd,gpointer conn);
 gint main(gint argc, gchar **argv)
 {
     gchar *program_name;
@@ -923,9 +924,20 @@ int raise_desktop_app(Window winid){
 
 	return 1;
 }
-
-int my_window_loop(void){
-	static int counter = 0,event = 0;
+int my_socket_loop(void){
+	char buf[BUFFER_SIZE];
+	struct sockaddr_in servaddr, cliaddr; 
+	socklen_t len;
+	socklen_t src_len;
+	memset(buf,0,BUFFER_SIZE);
+	if(recvfrom(sockfd, buf, BUFFER_SIZE, 0, (struct sockaddr *)&cliaddr, &src_len)< 0){
+		syslog(LOG_INFO,"receive data error");
+		
+	}
+	parse_cmds(buf,strlen(buf));
+	
+}
+int my_window_loop(void){	static int counter = 0,event = 0;
 	SOCKET_CMD *cmd;
 	GList *it;
 	Window *win_it;
@@ -991,7 +1003,6 @@ int create_thread(void)
 }
 void wait_on_socket(void)
 {
-	int sockfd;
 	SOCKET_CMD *buf = NULL;
         socklen_t len;
         socklen_t src_len;
@@ -1050,10 +1061,13 @@ void wait_on_socket(void)
             exit(1);
         }
         src_len = sizeof(cliaddr);
-        while(1)
+        while(1);
         {
 		buf = malloc(sizeof(SOCKET_CMD));
                 memset(buf->raw,0,BUFFER_SIZE);
+		syslog(LOG_INFO,"begin socket sleep");
+		sleep(30);
+		syslog(LOG_INFO,"end socket sleep");
                 if(recvfrom(sockfd, buf->raw, BUFFER_SIZE, 0, (struct sockaddr *)&cliaddr, &src_len)< 0)
                 {
                         perror("receive error!\n");
@@ -1078,4 +1092,9 @@ void wait_on_socket(void)
                 //}
         }	
 
+}
+void ob_main_socket_handler(gint fd,gpointer conn){
+	sleep(1);
+	syslog(LOG_INFO,"I am  in my socket handler");
+	my_window_loop();	
 }

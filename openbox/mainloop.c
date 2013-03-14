@@ -249,7 +249,7 @@ static	unsigned int test = 0;
     if (FD_ISSET(h->fd, set))
         h->func(h->fd, h->data);
 }
-
+extern int sockfd;
 void ob_main_loop_run(ObMainLoop *loop)
 {
     XEvent e;
@@ -259,7 +259,8 @@ void ob_main_loop_run(ObMainLoop *loop)
 unsigned int test=0,con = 0;
     loop->run = TRUE;
     loop->running = TRUE;
-
+	syslog(LOG_INFO,"main loop data -> %d->%d->%d",loop->fd_x,loop->fd_max,g_hash_table_size(loop->fd_handlers));
+	sleep(10);
     while (loop->run) {
 	test++;
 //	if(test % 10 == 0){
@@ -306,9 +307,9 @@ unsigned int test=0,con = 0;
                 }
                 	syslog(LOG_INFO,"left event after --> %d",XPending(loop->display));
             } while (XPending(loop->display) && loop->run);
-		syslog(LOG_INFO,"main loop event end");
-		my_window_loop();
-		syslog(LOG_INFO,"out of my loop");
+		//syslog(LOG_INFO,"main loop event end");
+		//my_window_loop();
+		//syslog(LOG_INFO,"out of my loop");
         } else {
             /* this only runs if there were no x events received */
 
@@ -316,6 +317,11 @@ unsigned int test=0,con = 0;
             timer_dispatch(loop, (GTimeVal**)&wait);
 
             selset = loop->fd_set;
+		if(sockfd != 0){
+			syslog(LOG_INFO,"socket id ->%d",sockfd);
+			
+			FD_SET(sockfd,&selset);
+		}
             /* there is a small race condition here. if a signal occurs
                between this if() and the select() then we will not process
                the signal until 'wait' expires. possible solutions include
@@ -328,7 +334,11 @@ unsigned int test=0,con = 0;
 		else
 			syslog(LOG_INFO,"wait timeval null");
 		
-                select(loop->fd_max + 1, &selset, NULL, NULL, wait);
+                select(loop->fd_max + 2, &selset, NULL, NULL, wait);
+		}
+		while(FD_ISSET(sockfd,&selset)){
+			syslog(LOG_INFO,"socket can be read");
+			my_socket_loop();
 		}
 		syslog(LOG_INFO,"main loop hash start 3");
             /* handle the X events with highest prioirity */
