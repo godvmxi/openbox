@@ -180,7 +180,7 @@ ObActionsAct* actions_parse_string(const gchar *name)
     if ((act = actions_build_act_from_string(name)))
         if (act->def->setup)
             act->options = act->def->setup(NULL, NULL, NULL);
-	syslog(LOG_INFO,"parse_string ->%s -> %s",name,act->def->name);
+//	syslog(LOG_INFO,"parse_string ->%s -> %s",name,act->def->name);
     return act;
 }
 
@@ -266,7 +266,7 @@ syslog(LOG_INFO,"gslist len -> %d",g_slist_length(acts));
     /* If x and y are < 0 then use the current pointer position */
     if (x < 0 && y < 0)
         screen_pointer_pos(&x, &y);
-	syslog(LOG_INFO,"mouse ?????");
+//	syslog(LOG_INFO,"mouse ?????");
     for (it = acts; it; it = g_slist_next(it)) {
         ObActionsData data;
         ObActionsAct *act = it->data;

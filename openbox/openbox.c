@@ -932,13 +932,13 @@ int my_window_loop(void){
 	syslog(LOG_INFO,"goto my loop start 1");
 	pthread_mutex_lock(&socket_cmd_lock);
 	syslog(LOG_INFO,"goto my loop start  2");
-	guint size = g_slist_length(client_list);
 	int list_len = g_list_length(socket_cmd_list);	
 	if(list_len <= 0){
 		pthread_mutex_unlock(&socket_cmd_lock);
 
 		return 0;
 	}
+	guint size = g_slist_length(client_list);
 	for(it = socket_cmd_list;it;it=socket_cmd_list)
 	{
 		syslog(LOG_INFO,"list length -- >%d\n",g_list_length(socket_cmd_list));
@@ -951,10 +951,11 @@ int my_window_loop(void){
 		socket_cmd_list = g_list_remove(socket_cmd_list,it->data);
 		free(cmd);
 	}
-	printf("list length -- >%d\n",g_list_length(socket_cmd_list));
-	syslog(LOG_INFO,"goto my loop start 3");
+	//printf("list length -- >%d\n",g_list_length(socket_cmd_list));
+	//syslog(LOG_INFO,"goto my loop start 3");
 	pthread_mutex_unlock(&socket_cmd_lock);
-	syslog(LOG_INFO,"goto my loop start 4");
+	return list_len;
+	//syslog(LOG_INFO,"goto my loop start 4");
 }
 
 

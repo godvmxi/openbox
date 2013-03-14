@@ -262,9 +262,9 @@ unsigned int test=0,con = 0;
 
     while (loop->run) {
 	test++;
-	if(test % 10 == 0){
-		syslog(LOG_INFO,"main loop mark ->",con++);
-	}
+//	if(test % 10 == 0){
+//		syslog(LOG_INFO,"main loop mark ->",con++);
+//	}
         if (loop->signal_fired) {
             guint i;
             sigset_t oldset;
@@ -282,9 +282,9 @@ unsigned int test=0,con = 0;
                         h->func(i, h->data);
                     }
                     loop->signals_fired[i]--;
-			if(test % 10 == 0){
-				syslog(LOG_INFO,"main singal fired ");
-			}
+//			if(test % 10 == 0){
+//				syslog(LOG_INFO,"main singal fired ");
+//			}
                 }
             }
             loop->signal_fired = FALSE;
@@ -292,36 +292,44 @@ unsigned int test=0,con = 0;
             sigprocmask(SIG_SETMASK, &oldset, NULL);
 		syslog(LOG_INFO,"main loop singal fired end");
         } else if (XPending(loop->display)) {
-	//	syslog(LOG_INFO,"main loop event start");
+		syslog(LOG_INFO,"main loop event start");
             do {
-                XNextEvent(loop->display, &e);
-			if(test % 10 == 0){
-				syslog(LOG_INFO,"event deal");
-			}
+                	syslog(LOG_INFO,"left event before--> %d",XPending(loop->display));
+			XNextEvent(loop->display, &e);
+//			if(test % 10 == 0){
+//				syslog(LOG_INFO,"event deal");
+//			}
 
                 for (it = loop->x_handlers; it; it = g_slist_next(it)) {
                     ObMainLoopXHandlerType *h = it->data;
                     h->func(&e, h->data);
                 }
+                	syslog(LOG_INFO,"left event after --> %d",XPending(loop->display));
             } while (XPending(loop->display) && loop->run);
-	//	syslog(LOG_INFO,"main loop event end");
+		syslog(LOG_INFO,"main loop event end");
 		my_window_loop();
+		syslog(LOG_INFO,"out of my loop");
         } else {
             /* this only runs if there were no x events received */
 
 		syslog(LOG_INFO,"main loop hash start");
             timer_dispatch(loop, (GTimeVal**)&wait);
 
-		syslog(LOG_INFO,"main loop hash start 2");
             selset = loop->fd_set;
             /* there is a small race condition here. if a signal occurs
                between this if() and the select() then we will not process
                the signal until 'wait' expires. possible solutions include
                using GStaticMutex, and having the signal handler set 'wait'
                to 0 */
-            if (!loop->signal_fired)
+		syslog(LOG_INFO,"main loop hash start 2");
+            if (!loop->signal_fired){
+		if(wait != NULL)
+			syslog(LOG_INFO,"wait timeval -->%d ->%d",wait->tv_sec,wait->tv_usec);
+		else
+			syslog(LOG_INFO,"wait timeval null");
+		
                 select(loop->fd_max + 1, &selset, NULL, NULL, wait);
-
+		}
 		syslog(LOG_INFO,"main loop hash start 3");
             /* handle the X events with highest prioirity */
             if (FD_ISSET(loop->fd_x, &selset)){
