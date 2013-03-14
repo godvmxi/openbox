@@ -336,7 +336,7 @@ unsigned int test=0,con = 0;
 		
                 select(loop->fd_max + 2, &selset, NULL, NULL, wait);
 		}
-		while(FD_ISSET(sockfd,&selset)){
+		if(FD_ISSET(sockfd,&selset)){
 			syslog(LOG_INFO,"socket can be read");
 			my_socket_loop();
 		}
