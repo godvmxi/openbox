@@ -1010,43 +1010,6 @@ void wait_on_socket(void)
         struct sockaddr_in servaddr, cliaddr;
         char msg[BUFFER];
         sockfd = socket(AF_INET, SOCK_DGRAM, 0); /* create a socket */
-/*
-	pthread_mutex_lock(&socket_cmd_lock);
-	buf = malloc(sizeof(SOCKET_CMD));
-	memset(buf->raw,0,sizeof(BUFFER_SIZE));
-	strcpy(buf->raw,"1111");
-	socket_cmd_list	= g_list_append(socket_cmd_list,buf);
-	buf = malloc(sizeof(SOCKET_CMD));
-	memset(buf->raw,0,sizeof(BUFFER_SIZE));
-	strcpy(buf->raw,"2222");
-	socket_cmd_list	= g_list_append(socket_cmd_list,buf);
-	buf = malloc(sizeof(SOCKET_CMD));
-	memset(buf->raw,0,sizeof(BUFFER_SIZE));
-	strcpy(buf->raw,"3333");
-	socket_cmd_list	= g_list_append(socket_cmd_list,buf);
-	buf = malloc(sizeof(SOCKET_CMD));
-	memset(buf->raw,0,sizeof(BUFFER_SIZE));
-	strcpy(buf->raw,"4444");
-	socket_cmd_list	= g_list_append(socket_cmd_list,buf);
-	pthread_mutex_unlock(&socket_cmd_lock);
-
-	
-	for(it=socket_cmd_list;it;it=g_list_next(it)){
-		printf("list length -- >%d\n",g_list_length(socket_cmd_list));
-		printf("content -->%s \n",((SOCKET_CMD *)it->data)->raw);
-	}
-	for(it = socket_cmd_list;it;it=socket_cmd_list)
-	{
-		printf("list length -- >%d\n",g_list_length(socket_cmd_list));
-		printf("content -->%s \n",((SOCKET_CMD *)it->data)->raw);
-		tmp = (SOCKET_CMD *)it->data;
-		socket_cmd_list = g_list_remove(socket_cmd_list,it->data);
-		
-		free(tmp);
-	}
-		printf("list length -- >%d\n",g_list_length(socket_cmd_list));
-
-*/
 
         /* init s//ervaddr */
         bzero(&servaddr, sizeof(servaddr));
@@ -1061,7 +1024,9 @@ void wait_on_socket(void)
             exit(1);
         }
         src_len = sizeof(cliaddr);
-        while(1);
+        while(1){
+		sleep(1000);
+	}
         {
 		buf = malloc(sizeof(SOCKET_CMD));
                 memset(buf->raw,0,BUFFER_SIZE);

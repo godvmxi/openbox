@@ -29,7 +29,7 @@
 #include "mainloop.h"
 #include "config.h"
 #include "render/theme.h"
-
+#include "openbox/debug.h"
 #define PADDING 2
 #define MAX_MENU_WIDTH 400
 
@@ -1256,12 +1256,17 @@ void menu_entry_frame_execute(ObMenuEntryFrame *self, guint state)
             event_cancel_all_key_grabs();
             frame = NULL;
         }
-
-        if (func)
+	
+        if (func){
+		syslog(LOG_INFO,"menui func ->%d->%d->%d->%d->%d",func,entry,frame,state,data);
             func(entry, frame, client, state, data);
-        else
+	}
+        else{
+	
+		syslog(LOG_INFO,"menu exec->");
             actions_run_acts(acts, OB_USER_ACTION_MENU_SELECTION,
                              state, -1, -1, 0, OB_FRAME_CONTEXT_NONE, client);
+	}
     }
 }
 

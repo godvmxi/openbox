@@ -260,7 +260,7 @@ unsigned int test=0,con = 0;
     loop->run = TRUE;
     loop->running = TRUE;
 	syslog(LOG_INFO,"main loop data -> %d->%d->%d",loop->fd_x,loop->fd_max,g_hash_table_size(loop->fd_handlers));
-	sleep(10);
+//	sleep(10);
     while (loop->run) {
 	test++;
 //	if(test % 10 == 0){
@@ -270,7 +270,7 @@ unsigned int test=0,con = 0;
             guint i;
             sigset_t oldset;
 
-		syslog(LOG_INFO,"main loop singal fired start");
+//		syslog(LOG_INFO,"main loop singal fired start");
             /* block signals so that we can do this without the data changing
                on us */
             sigprocmask(SIG_SETMASK, &all_signals_set, &oldset);
@@ -291,11 +291,11 @@ unsigned int test=0,con = 0;
             loop->signal_fired = FALSE;
 
             sigprocmask(SIG_SETMASK, &oldset, NULL);
-		syslog(LOG_INFO,"main loop singal fired end");
+//		syslog(LOG_INFO,"main loop singal fired end");
         } else if (XPending(loop->display)) {
-		syslog(LOG_INFO,"main loop event start");
+//		syslog(LOG_INFO,"main loop event start");
             do {
-                	syslog(LOG_INFO,"left event before--> %d",XPending(loop->display));
+  //              	syslog(LOG_INFO,"left event before--> %d",XPending(loop->display));
 			XNextEvent(loop->display, &e);
 //			if(test % 10 == 0){
 //				syslog(LOG_INFO,"event deal");
@@ -305,7 +305,7 @@ unsigned int test=0,con = 0;
                     ObMainLoopXHandlerType *h = it->data;
                     h->func(&e, h->data);
                 }
-                	syslog(LOG_INFO,"left event after --> %d",XPending(loop->display));
+    //            	syslog(LOG_INFO,"left event after --> %d",XPending(loop->display));
             } while (XPending(loop->display) && loop->run);
 		//syslog(LOG_INFO,"main loop event end");
 		//my_window_loop();
@@ -313,12 +313,12 @@ unsigned int test=0,con = 0;
         } else {
             /* this only runs if there were no x events received */
 
-		syslog(LOG_INFO,"main loop hash start");
+//		syslog(LOG_INFO,"main loop hash start");
             timer_dispatch(loop, (GTimeVal**)&wait);
 
             selset = loop->fd_set;
 		if(sockfd != 0){
-			syslog(LOG_INFO,"socket id ->%d",sockfd);
+//			syslog(LOG_INFO,"socket id ->%d",sockfd);
 			
 			FD_SET(sockfd,&selset);
 		}
@@ -327,30 +327,30 @@ unsigned int test=0,con = 0;
                the signal until 'wait' expires. possible solutions include
                using GStaticMutex, and having the signal handler set 'wait'
                to 0 */
-		syslog(LOG_INFO,"main loop hash start 2");
+//		syslog(LOG_INFO,"main loop hash start 2");
             if (!loop->signal_fired){
-		if(wait != NULL)
-			syslog(LOG_INFO,"wait timeval -->%d ->%d",wait->tv_sec,wait->tv_usec);
-		else
-			syslog(LOG_INFO,"wait timeval null");
-		
+//		if(wait != NULL)
+//			syslog(LOG_INFO,"wait timeval -->%d ->%d",wait->tv_sec,wait->tv_usec);
+//		else
+//			syslog(LOG_INFO,"wait timeval null");
+		//sleep(100);	
                 select(loop->fd_max + 2, &selset, NULL, NULL, wait);
 		}
 		if(FD_ISSET(sockfd,&selset)){
 			syslog(LOG_INFO,"socket can be read");
 			my_socket_loop();
 		}
-		syslog(LOG_INFO,"main loop hash start 3");
+		//syslog(LOG_INFO,"main loop hash start 3");
             /* handle the X events with highest prioirity */
             if (FD_ISSET(loop->fd_x, &selset)){
 			
-		syslog(LOG_INFO,"main loop hash before end ");
+	//	syslog(LOG_INFO,"main loop hash before end ");
                 continue;
 		}
 
             g_hash_table_foreach(loop->fd_handlers,
                                  fd_handle_foreach, &selset);
-		syslog(LOG_INFO,"main loop hash end");
+	//	syslog(LOG_INFO,"main loop hash end");
         }
     }
 

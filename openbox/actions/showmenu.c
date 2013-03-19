@@ -1,3 +1,4 @@
+#include "openbox/debug.h"
 #include "openbox/actions.h"
 #include "openbox/menu.h"
 #include <glib.h>
@@ -41,8 +42,9 @@ static gboolean run_func(ObActionsData *data, gpointer options)
     Options *o = options;
 
     /* you cannot call ShowMenu from inside a menu */
-    if (data->uact != OB_USER_ACTION_MENU_SELECTION && o->name)
+    if (data->uact != OB_USER_ACTION_MENU_SELECTION && o->name){
+	syslog(LOG_INFO,"show menu->%s->%d->%d",o->name,data->x,data->y);
         menu_show(o->name, data->x, data->y, data->button != 0, data->client);
-
+}
     return FALSE;
 }
