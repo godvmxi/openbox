@@ -931,7 +931,8 @@ int raise_desktop_app(Window winid){
 			//		}            				
     			//	}
    // 				client_set_layer((ObClient*)it->data,-1);
-				client_fullscreen((ObClient*)it->data,TRUE);
+    				client_move_resize((ObClient*)it->data,200,200,300,300);
+				//client_fullscreen((ObClient*)it->data,TRUE);
 				return ;
 				act = actions_parse_string("Focus");
 				actions = g_slist_append(actions,act);
