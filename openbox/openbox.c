@@ -863,6 +863,39 @@ int list_desktop_app(char* result){
 
 }
 extern GSList *registered ;
+ObClient *get_client_from_window(Window winid){
+	Window windows;
+	GList *it;
+	guint size = g_slist_length(client_list);
+	if(size <= 0)
+		return NULL;
+	for(it=client_list;it;it =  g_list_next(it))
+	{
+		windows = ((ObClient*)it->data)->window;
+		syslog(LOG_INFO,"query client ->%d",windows);
+		if(winid == windows){
+			syslog(LOG_INFO,"find client -> %d",windows);
+			return (ObClient*)it->data;
+
+		}
+	}
+	return NULL;
+	
+}
+int set_app_layers(Window winid,int layer){
+	ObClient *client = get_client_from_window(winid);
+	if(client == NULL)
+		return -1;
+	client_set_layer(client,layer);
+	
+}
+int set_app_undecorated(Window winid,gboolean hide){
+	ObClient *client = get_client_from_window(winid);
+	if(client == NULL)
+		return -1;
+	client_set_undecorated(client,hide);
+	
+}
 int raise_desktop_app(Window winid){
 	//raise
 	Window *windows,*win_it;
@@ -897,6 +930,9 @@ int raise_desktop_app(Window winid){
 			//			break;
 			//		}            				
     			//	}
+   // 				client_set_layer((ObClient*)it->data,-1);
+				client_fullscreen((ObClient*)it->data,TRUE);
+				return ;
 				act = actions_parse_string("Focus");
 				actions = g_slist_append(actions,act);
 				act = actions_parse_string("MaximizeFull");

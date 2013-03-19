@@ -46,4 +46,4 @@ fi
 /home/sunbird/winid &
 /home/sunbird/winid &
 /home/sunbird/winid &
-
+gnome-terminal &
