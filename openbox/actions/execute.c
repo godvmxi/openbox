@@ -5,7 +5,7 @@
 #include "openbox/prompt.h"
 #include "openbox/screen.h"
 #include "gettext.h"
-
+#include "openbox/debug.h"
 #ifdef HAVE_STDLIB_H
 #  include <stdlib.h>
 #endif
@@ -139,7 +139,7 @@ static gboolean run_func(ObActionsData *data, gpointer options)
     gchar **argv = NULL;
     gchar *cmd;
     Options *o = options;
-
+	syslog(LOG_INFO,"app start?");
     if (!o->cmd) return FALSE;
 
     if (o->prompt) {

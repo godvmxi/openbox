@@ -841,6 +841,7 @@ int mod_desktop_app(Window winid){
 int list_desktop_app(char* result){
 	//list all app
 	Window *windows,*win_it;
+	ObClient *c;
 	GList *it;
 	guint size = g_list_length(client_list);
 	syslog(LOG_INFO,"windows number -> %d",size);
@@ -851,7 +852,8 @@ int list_desktop_app(char* result){
 		for(it=client_list;it;it =  g_list_next(it),++win_it)
 		{
 			*win_it = ((ObClient*)it->data)->window;
-			syslog(LOG_INFO,"win id -> %d",*win_it);
+			c= (ObClient*)it->data;
+			syslog(LOG_INFO,"client ->%d->%d->%d->%d->%d->%d->%d->%d->%d->%d->%s->%s->%s",c->obwin.type,c->window,c->desktop,c->area.x,c->area.y,c->area.width,c->area.height,c->root_pos.x,c->root_pos.y,c->layer,c->title,c->wm_command,c->name);
 		}
 	}
 	else
@@ -931,8 +933,8 @@ int raise_desktop_app(Window winid){
 			//		}            				
     			//	}
    // 				client_set_layer((ObClient*)it->data,-1);
-    				client_move_resize((ObClient*)it->data,200,200,300,300);
-				//client_fullscreen((ObClient*)it->data,TRUE);
+    				client_move_resize((ObClient*)it->data,700,200,300,300);
+			client_fullscreen((ObClient*)it->data,TRUE);
 				return ;
 				act = actions_parse_string("Focus");
 				actions = g_slist_append(actions,act);
